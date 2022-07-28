@@ -1,12 +1,9 @@
 import React from "react";
-import ReactDOM  from "react-dom";
-import { useEffect, useState, useRef } from "react";
-import { nanoid } from "nanoid";
-
+import { useEffect, useState } from "react";
 import MainTemp from "./components/MainTemp";
 import HourlyTemp from "./components/HourlyTemp";
 import DailyTemp from "./components/DailyTemp";
-
+import Footer from "./components/Footer";
 export default function App(){
     
 
@@ -44,19 +41,25 @@ export default function App(){
                                             oras: '',
                                             jud: ''
 }])
-    
+
+    const [noRes, setNoRes] = useState([])
+
    useEffect(()=>{
         if(inputLocation.length === 0){
             setLocation([])
-        }},[inputLocation])
-  
+            setNoRes([])
+        }else if(location.length === 0) {
+            setNoRes(["No result!"])
+        }else if(location.length > 3){
+            setLocation([])
+            setNoRes(["No result!"])
+        }
+
+    },[inputLocation])
 
     function inputValues(e){
         setInputLocation(e.target.value)
     }
-
-   
-
     useEffect(()=>{
         const timer = setTimeout(()=>{
             fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${inputLocation}`)
@@ -85,23 +88,29 @@ export default function App(){
 
 
     useEffect(()=>{
-        fetch('http://ip-api.com/json/')
+        fetch("https://ipinfo.io/json?token=a52e57c897dccc")
         .then(res => res.json())
         .then(data=>{
-            console.log(data)
+            const index = data.loc.indexOf(",")
+            const lat = parseInt(data.loc.slice(0, index))
+            const long = parseInt(data.loc.slice(index+1, data.loc.length))
             setCoordonateIp([{
-                lat: data.lat,
-                long: data.lon
+                lat: lat,
+                long: long
     }])
         setIpRegion([{
                 oras: data.city,
-                jud: data.regionName
+                jud: data.region
     }])
 
      }
 
-    )
-    },[])
+    ).catch((error) => {
+        console.log(error)
+      })
+
+    
+    },[location])
 
     function coordonateIpClick(){
         setCoordonate(coordonateIp)
@@ -130,6 +139,7 @@ export default function App(){
                       inputChangeLocation={inputValues}
                       clickCoordonateIp={coordonateIpClick}
                       valueInput={inputLocation}
+                      noResults={noRes}
                       locationSelect={location}
                       divClick={judetOnClick}
                       judOras={judOras}
@@ -143,7 +153,8 @@ export default function App(){
             <DailyTemp  darkMode={isDarkMode}
                         colorDarkMode={darkModeStyle}
                         currentTemp={meteo.daily}/>
-
+            <Footer     darkMode={isDarkMode}
+                        colorDarkMode={darkModeStyle}/>
         </div>
            
     )

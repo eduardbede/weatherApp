@@ -1,17 +1,14 @@
 
-import WbSunnyIcon from '@mui/icons-material/WbSunny';
 import AirIcon from '@mui/icons-material/Air';
 import { WiDaySunnyOvercast, WiDaySunny, WiFog, WiHumidity, WiRainMix, WiRain, WiSnow, WiShowers, WiThunderstorm } from "react-icons/wi";
 import { DateTime } from "luxon";
-import { Info } from 'luxon';
 import { useEffect, useState } from 'react';
 import { nanoid } from 'nanoid';
 
 
 export default function HourlyTemp(props){
-
     const [sunriseSunset, setSunriseSunset] =   useState({
-        sunrise: "",
+        sunrise: '',
         sunset: ''
     })
     const [indexTime, setIndexTime] = useState()
@@ -19,7 +16,6 @@ export default function HourlyTemp(props){
     const [hours, setHours] = useState([]);
     const [hoursIcons, setHoursIcons] = useState([]);
     const [hoursTemp, setHoursTemp] = useState([]);
-
     const hourMap = hours.map(el=>{
         return <div key={nanoid()} className="w-10 h-10 text-center font-bold font-mono flex justify-center items-center text-xl">{el}</div>
     })
@@ -39,37 +35,36 @@ export default function HourlyTemp(props){
         return todayDay
     }
     
-    const todayDayDate = DateTime.now().setLocale('en-GB').toLocaleString()
-    
+    const todayDayDate = DateTime.now().setLocale('en-GB').toFormat("dd/MM/yy")
 
 //functie care ne arata cum este vremea actuala
     function weatherNow(){
         const code = props.currentTemp.current_weather.weathercode;
         let nowWeather = ''
         if (code === 0){
-            nowWeather = "Clear sky";
+            nowWeather = <><WiDaySunny size="1.5em" />Clear sky </>; 
         }else if (code >= 1 && code <= 3 ){
-            nowWeather = "Partly Cloudy";
+            nowWeather = <><WiDaySunnyOvercast size="1.5em" />Partly Cloudy</>; 
         }else if(code >= 45 && code <= 48 ){
-            nowWeather = "Fog";
+            nowWeather = <><WiFog size="1.5em" />Fog</>; 
         }else if(code >= 51 && code <= 55 ){
-            nowWeather = "Drizzle";
+            nowWeather = <><WiRainMix size="1.5em" />Drizzle</> ;
         }else if(code >= 56 && code <= 57 ){
-            nowWeather = "Freezing Drizzle";
+            nowWeather = <><WiRainMix size="1.5em" />Freezing Drizzle</>; ;
         }else if(code >= 61 && code <= 65 ){
-            nowWeather = "Rain";
+            nowWeather = <><WiRain size="1.5em" />Rain</> ;
         }else if(code >= 66 && code <= 67 ){
-            nowWeather = "Freezing Rain";
+            nowWeather = <><WiRain size="1.5em" />Freezing Rain</>;
         }else if(code >= 71 && code <= 75 ){
-            nowWeather = "Snow fall";
+            nowWeather = <> <WiSnow size="1.5em" Snow/>Snow fall</>;
         }else if(code === 77 ){
-            nowWeather = "Snow";
+            nowWeather = <><WiSnow size="1.5em" />Snow</>; 
         }else if(code >= 80 && code <= 82 ){
-            nowWeather = "Rain";
+            nowWeather = <><WiShowers size="1.5em" />Rain</>;
         }else if(code >= 85 && code <= 86 ){
-            nowWeather = "Snow";
+            nowWeather = <><WiSnow size="1.5em" />Snow</>; 
         }else if(code >= 95 && code <= 96  ){
-            nowWeather = "Thunderstorm";
+            nowWeather = <><WiThunderstorm size="1.5em" />Thunderstorm</>; 
         }
 
         return nowWeather
@@ -79,9 +74,20 @@ export default function HourlyTemp(props){
     
     useEffect(()=>{
         if(props.currentTemp.daily.sunrise !== undefined && indexTime !== undefined){
-            setSunriseSunset({  sunrise : DateTime.fromISO(props.currentTemp.daily.sunrise[0]).toFormat("HH:mm").toLocaleString(),
-                                sunset : DateTime.fromISO(props.currentTemp.daily.sunset[0]).toFormat("HH:mm").toLocaleString()
-            })
+                const sunriseObj = DateTime.fromISO(props.currentTemp.daily.sunrise[0])
+                const sunsetObj = DateTime.fromISO(props.currentTemp.daily.sunset[0])
+                function sunrise(){
+                    const {day, hour, month, year, minute} = DateTime.fromISO(sunriseObj).toUTC().toObject()
+                   return DateTime.utc(year, month ,day , hour, minute).toLocal().toFormat("HH:mm")
+                }
+                function sunset(){
+                    const {day, hour, month, year, minute} = DateTime.fromISO(sunsetObj).toUTC().toObject()
+                   return DateTime.utc(year, month ,day , hour, minute).toLocal().toFormat("HH:mm")
+                }                
+                
+            setSunriseSunset({  sunrise : sunrise(),
+                                sunset : sunset()
+                            })
         } 
        
     },[props.currentTemp.daily.sunrise, props.currentTemp.daily.sunset, indexTime])
@@ -93,7 +99,7 @@ export default function HourlyTemp(props){
             const indexOfTime = props.currentTemp.hourly.time.indexOf(props.currentTemp.current_weather.time)
             setIndexTime(indexOfTime)
         }
-    },[props.currentTemp.current_weather.time, props.currentTemp.hourly.time , indexTime])
+    },[props.currentTemp.current_weather.time, props.currentTemp.hourly.time, indexTime])
  
    
     useEffect(()=>{
@@ -109,11 +115,12 @@ export default function HourlyTemp(props){
         if(props.currentTemp.hourly.time !== undefined && indexTime !== undefined){
             const hours = props.currentTemp.hourly.time.slice(indexTime+1, indexTime+8)
             const hoursMap = hours.map(el=>{
-           return DateTime.fromISO(el).toFormat("HH").toLocaleString()
+                         const {day, hour, month, year} = DateTime.fromISO(el).toUTC().toObject()
+                return DateTime.utc(year, month ,day , hour).toLocal().toFormat("HH")
+                /* DateTime.fromISO(el).toFormat("HH").toLocaleString()  */
         })
         setHours(hoursMap)
         } 
-        
         
     },[props.currentTemp.hourly.time, indexTime])
     
@@ -166,7 +173,10 @@ export default function HourlyTemp(props){
                     <p>{dayOfTheWeek()}</p>
                     <p >{todayDayDate}</p>
                 </div>
-                <p className='text-sm md:text-xl'>{weatherNow()}</p>
+                <div className='flex items-start'>
+                        <p className='text-sm md:text-xl flex items-center gap-1'>{weatherNow()}</p>
+                </div>
+                
             </div>
             <div style={props.colorDarkMode} className='flex gap-16 md:justify-center md:gap-32 pb-7 font-mono font-bold'>
                 <div className='flex items-start flex-col md:flex-row md:gap-4'>
